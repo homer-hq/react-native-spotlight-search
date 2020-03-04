@@ -13,5 +13,6 @@
 @interface RCTSpotlightSearch : RCTEventEmitter <RCTBridgeModule>
 
 + (void)handleContinueUserActivity:(NSUserActivity *)userActivity;
++ (void)setSpotlightInitialIdentifier:(NSString *)initialIdentifier;
 
 @end

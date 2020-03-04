@@ -20,12 +20,12 @@ static NSString *const kSpotlightSearchItemTapped = @"spotlightSearchItemTapped"
 
 @property (nonatomic, strong) id<NSObject> continueUserActivityObserver;
 @property (nonatomic, strong) id<NSObject> bundleDidLoadObserver;
-@property (nonatomic, copy) NSString *initialIdentifier;
 @property (nonatomic, assign) BOOL hasListeners;
 
 @end
 
 @implementation RCTSpotlightSearch
+static NSString *_initialIdentifier;
 
 RCT_EXPORT_MODULE();
 
@@ -98,6 +98,10 @@ RCT_EXPORT_MODULE();
     return activityQueue;
 }
 
++ (void)setSpotlightInitialIdentifier:(NSString *)initialIdentifier {
+  _initialIdentifier = initialIdentifier;
+}
+
 + (void)handleContinueUserActivity:(NSUserActivity *)userActivity {
     [[NSNotificationCenter defaultCenter] postNotificationName:kHandleContinueUserActivityNotification
                                                         object:nil
@@ -111,8 +115,10 @@ RCT_EXPORT_MODULE();
     if (!uniqueItemIdentifier) {
         return;
     }
+  
+  NSLog(@"SEARCH %@", uniqueItemIdentifier);
 
-    self.initialIdentifier = uniqueItemIdentifier;
+    _initialIdentifier = uniqueItemIdentifier;
     
     if (!self.hasListeners) {
         return;
@@ -122,7 +128,7 @@ RCT_EXPORT_MODULE();
 }
 
 RCT_EXPORT_METHOD(getInitialSearchItem:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject) {
-    resolve(self.initialIdentifier);
+    resolve(_initialIdentifier);
 }
 
 RCT_EXPORT_METHOD(indexItem:(NSDictionary *)item resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject) {
@@ -143,9 +149,6 @@ RCT_EXPORT_METHOD(indexItems:(NSArray *)items resolver:(RCTPromiseResolveBlock)r
             attributeSet.thumbnailData = UIImagePNGRepresentation(image);
         } else if (item[@"thumbnailUri"]) {
             attributeSet.thumbnailURL = [NSURL fileURLWithPath:item[@"thumbnailUri"]];
-        } else if (item[@"thumbnailData"]) {
-            attributeSet.thumbnailData = 
-                [[NSData alloc] initWithBase64EncodedString:item[@"thumbnailData"] options:0];
         }
         
         CSSearchableItem *searchableItem = [[CSSearchableItem alloc] initWithUniqueIdentifier:item[@"uniqueIdentifier"]
